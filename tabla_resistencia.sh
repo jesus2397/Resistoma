@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cut -f 2 "blastn_porechop_Muestra01_barcode04.fastq.txt"> "columna_genes.txt"
+cut -f 2 "blastn_Muestra01_barcode04_racon4.fasta.txt"> "columna_genes.txt"
 
 contador_aminoglycoside=0      
 contador_betalactam=0
@@ -198,7 +198,7 @@ percentage_trimethoprim=$(echo "scale=1; ($contador_trimethoprim * 100) / $suma_
 
 
 
-
+echo "El numero total de genes de resistencia a antibioticos en la muestra es: "$suma_total
 
 
 rm columna_genes.txt
@@ -224,6 +224,7 @@ echo "El numero de genes de resistencia a trimetropin es: "$contador_trimethopri
 #Creacion del archivo tabular
 
 echo -e "Antibiotics\tNumber of genes\tPercentage">tabla_informacion_resistencia.txt
+echo -e "Aminoglycosides\t$contador_aminoglycoside\t$percentage_aminoglycoside">>tabla_informacion_resistencia.txt
 echo -e "Beta-Lactam\t$contador_betalactam\t$percentage_betalactam">>tabla_informacion_resistencia.txt
 echo -e "Colistin\t$contador_colistin\t$percentage_colistin" >> tabla_informacion_resistencia.txt
 echo -e "Fosfomicin\t$contador_fosfomicin\t$percentage_fosfomicin" >> tabla_informacion_resistencia.txt
@@ -242,4 +243,27 @@ echo -e "Tetracyclines\t$contador_tetracycline\t$percentage_tetracycline" >> tab
 echo -e "Trimethoprim\t$contador_trimethoprim\t$percentage_trimethoprim" >> tabla_informacion_resistencia.txt
 
 echo "TABLA CREADA EN ARCHIVO: tabla_informacion_resistencia.txt"
-echo "Script creado por Jesus L. Cañizares, Investigador predoctoral en CEBAS-CSIC"
+
+#Script en lenguaje R
+Rscript - <<RSCRIPT
+
+#Creación de un barplot con los porcentajes de genes de resistencia a antibióticos
+
+library(ggplot2)
+data=data=read.delim("tabla_informacion_resistencia.txt")
+#View(data)
+
+df=as.data.frame(data)
+df
+
+
+grafico=ggplot(data=df,aes(x=reorder(Antibiotics, +Percentage), y = Percentage,fill=Antibiotics)) + geom_bar(stat = "identity", aes(fill=Antibiotics))+coord_flip()+ ylim(c(0,100))+labs(title="Percentage of resistance genes to antibiotics",size=40,x="Antibiotics")+
+theme(plot.title = element_text(size = 18))
+
+ggsave("Barplot_resistencia.pdf", plot=grafico,width = 10, height = 8)
+
+RSCRIPT
+
+echo "Barplot Antibioticos-Porcentaje de genes de resistencia creado y guardado en archivo Barplot_resistencia.pdf"
+
+echo "**Script creado por Jesus L. Cañizares, Investigador predoctoral en CEBAS-CSIC**"
